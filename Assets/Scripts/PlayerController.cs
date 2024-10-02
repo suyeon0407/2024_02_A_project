@@ -7,11 +7,12 @@ public class PlayerController : MonoBehaviour
     [Header ("Player Movement")]
     public float moveSpeed = 5.0f;
     public float jumpForce = 5.0f;
+    public float rotationSpeed = 10.0f;
 
     [Header("Camera Settings")]
     public Camera firstPersonCamera;
     public Camera thirdPersonCamera;
-    public float mousrSenesitivity = 2.0f;
+    public float mouseSensitivity = 2.0f;
 
     public float radius = 5.0f;
     public float minRadius = 1.0f;
@@ -23,9 +24,9 @@ public class PlayerController : MonoBehaviour
     private float theta = 0.0f;
     private float phi = 0.0f;
     private float targetVericalRotation = 0;
-    private float verticalRoatationSpeed = 2401f;
+    private float verticalRoatationSpeed = 240f;
 
-    private bool isfirstPerson = true;
+    public bool isFirstPerson = true;
     private bool isGrounded;
     private Rigidbody rb;
     // Start is called before the first frame update
@@ -38,54 +39,72 @@ public class PlayerController : MonoBehaviour
         SetActiveCamera();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        HandleMovement();
         HandleRotation();
         HandleJump();
         HandleCameraToggle();
     }
 
-    void SetupCamera()
+    private void FixedUpdate()
+    {
+        HandleMovement();
+    }
+   
+
+    void SetupCameras()
     {
         firstPersonCamera.gameObject.SetActive(isFirstPerson);
         firstPersonCamera.gameObject.SetActive(!isFirstPerson);
     }
+
+    void SetActiveCamera()
+    {
+        firstPersonCamera.gameObject.SetActive(isFirstPerson);
+        thirdPersonCamera.gameObject.SetActive(!isFirstPerson);
+    }
     void HandleRotation()
     {
-        float mouseX-Input.GetAxis("Mouse X") * mouseSenesitivity;
-        float mouseY-Input.GetAxis("Mouse Y") * mouseSenesitivity;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
     }
 
     void HandleMovement()
     {
-        float monoHorizontal = Input.GetAxis("Horizontal");
+        float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
 
-        if(!isfirstPerson)
+        Vector3 movement;
+
+        if(!isFirstPerson)
         {
-            firstPersonCamera.transform.localRotation = Quaternion.Euler(phi, 0.0f, 0.0f);
+            Vector3 cameraForward = thirdPersonCamera.transform.forward;
+            cameraForward.y = 0.0f;
+            cameraForward.Normalize();
+
+            Vector3 cameraRight = thirdPersonCamera.transform.right;
+            cameraRight.y = 0.0f;
+            cameraRight.Normalize();
+
+            movement = cameraRight * moveHorizontal + cameraForward * moveVertical;
         }
         else
         {
-            float x = radius * Mathf.Sin(Mathf.Deg2Rad * phi) * Mathf.Cos(Mathf.Deg2Red * theta);
-            float y = radius * Mathf.Cos(Mathf.Deg2Rad * phi);
-            float z = radius * Mathf. Sin(Mathf.Deg2Rad * phi) * Mathf.Sin(Mathf.Deg2Red * theta);
+            movement = transform.right*moveHorizontal+transform.forward*moveVertical;
+        }
 
-            thirdPersonCamera.transform.position = transfrom.position + new Vector3(x, y, z);
-            thirdPersonCamera.transform.LookAt(transform);
+        if(movement.magnitude > 0.1f)
+        {
+            Quaternion toRotation = Quaternion.LookRotation(movement, Vector3.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation,toRotation,rotationSpeed * Time.deltaTime);
+        }
 
-            radius = Mathf.Clamp(radius - Input.GetAxis("Mouse ScrollWheel") * 5, minRadius, maxRadius);
-        }    
-
-        Vector3 movement = transform.right * moveHorizontal + transform.forward * moveVertical;
-        rb.MovePosition(rb.position + movement * moveSpeed * Time.deltaTime);
+        rb.MovePosition(rb.position+movement*moveSpeed*Time.deltaTime);
     }
 
     void HandleCameraToggle()
     {
-        if(Imput.GetKeyDown(KeyCode.C))
+        if(Input.GetKeyDown(KeyCode.C))
         {
             isFirstPerson = !isFirstPerson;
             SetActiveCamera();
@@ -93,20 +112,17 @@ public class PlayerController : MonoBehaviour
     }
     void HandleJump()
     {
-        if(Input.GetKeyDown(KeyCode.Spase)&& isGrounded)
+        if(Input.GetKeyDown(KeyCode.Space)&& isGrounded)
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             isGrounded = false;
         }
     }
 
-    private void OnCollisionStay(collision collision)
+    private void OnCollisionStay(Collision collision)
     {
         isGrounded = true;
     }
 
-    void Update()
-    {
-        HandleJump();
-    }
+
 }
