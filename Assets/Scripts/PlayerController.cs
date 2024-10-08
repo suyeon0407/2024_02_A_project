@@ -27,8 +27,15 @@ public class PlayerController : MonoBehaviour
     private float verticalRoatationSpeed = 240f;
 
     public bool isFirstPerson = true;
-    private bool isGrounded;
+    //private bool isGrounded;
     private Rigidbody rb;
+
+    public float fallingThreshHold = -0.1f;
+
+    [Header("Ground Check Setting")]
+    public float groundCheckDistance = 0.3f;
+    public float slopedLimit = 45f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -42,8 +49,12 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         HandleRotation();
-        HandleJump();
         HandleCameraToggle();
+
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            HandleJump();
+        }
     }
 
     private void FixedUpdate()
@@ -69,7 +80,7 @@ public class PlayerController : MonoBehaviour
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
     }
 
-    void HandleMovement()
+    public void HandleMovement()
     {
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
@@ -110,19 +121,28 @@ public class PlayerController : MonoBehaviour
             SetActiveCamera();
         }
     }
-    void HandleJump()
+    public void HandleJump()
     {
-        if(Input.GetKeyDown(KeyCode.Space)&& isGrounded)
+        if(isGrounded())
         {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            isGrounded = false;
+
         }
+        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+
     }
 
-    private void OnCollisionStay(Collision collision)
+    public bool isGrounded()
     {
-        isGrounded = true;
+        return Physics.Raycast(transform.position,Vector3.down,2.0f);
     }
 
+    public bool isFalling()
+    {
+        return rb.velocity.y < fallingThreshold && !isGrounded();
+    }
 
+    public float GetVerticalVelocity()
+    {
+        return rb.velocity.y;
+    }
 }
