@@ -9,6 +9,21 @@ public class CollectibleItem : MonoBehaviour
     public float respawnTime = 30.0f;
     public bool canCollect = true;
 
+    public void CollectItem(playerInventory inventory)
+    {
+        if(!canCollect) return;
+
+        inventory.AddItem(itemType);
+
+        if(FloatingTextManager.instance!= null )
+        {
+            Vector3 textPosition = transform.position + Vector3.up * 0.5f;
+            FloatingTextManager.instance.Show($"+{itemName}", textPosition);
+        }
+        Debug.Log($"{itemName}수집완료");
+        
+    }
+
     public void CollectItem(PlayerInventory inventory)
     {
         if (!canCollect) return;
