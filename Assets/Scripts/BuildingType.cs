@@ -10,17 +10,13 @@ public enum BuildingType
     storage
 }
 
-[System.Serializable]
+[Ststem.Serializable]
 
 public class CraftingRecipe
 {
     public string itemName;
     public ItemType resultItem;
     public int resultAmount = 1;
-
-    public float hungerRestorAmount;
-    public float repairAmount;
-
     public ItemType[] requiredItems;
     public int[] requiredAmounts;
 }
